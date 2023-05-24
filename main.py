@@ -34,7 +34,31 @@ class State:
         avg_sin = np.sum(np.multiply(adj, sin(dir_tiled)),axis=1) / N
         avg_cos = np.sum(np.multiply(adj, cos(dir_tiled)),axis=1) / N
         self.dir = arctan(avg_sin / avg_cos)
+    
+    #Plot the state 
+    def PlotState(self):
+        plt.quiver(self.pos[0], self.pos[1], cos(self.dir), sin(self.dir), scale=70)
+        plt.title('Particles Positions and velocity')
 
 
-s = State()
-s.update_dir()
+
+st = State()
+#PlotState(st)
+
+
+def update (frame):
+    plt.cla()
+    print(st.vel)
+    st.update_Pos(0.001)
+    PlotState(st)
+    plt.xlabel('x')
+    plt.ylabel('y')
+    #plt.title(f'Time = {frame * h:.6f} sec')
+    plt.grid(True)
+
+
+fig = plt.figure()
+animation = FuncAnimation(fig, update, frames=k, interval=10)
+
+
+plt.show()
