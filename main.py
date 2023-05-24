@@ -1,12 +1,19 @@
 import numpy as np
 from numpy import pi, cos, sin, arctan
 from scipy.spatial.distance import pdist, squareform
+import matplotlib 
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
 
 # constants
 N = 1000
 L = 64.0
 v = 100.0
 r = 1.0
+k = 100
+h = 1e-6
+
 
 class State:
     def __init__(self):
