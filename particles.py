@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 class Particles:
     title = 'Particles Positions and velocity'
 
-    def __init__(self, N:int=10, L:float=7.0, v:float=0.03,
-                 r:float=1.0, eta:float=1.5, dt:float=2.0,
+    def __init__(self, N:int=150, L:float=7, v:float=0.03,
+                 r:float=1.0, eta:float=0, dt:float=2.0,
                  is_extrinstic_noise:bool = False):
         self.N = N
         self.L = L
@@ -29,29 +29,25 @@ class Particles:
         self.pos += self.vel * self.dt
         self.pos %= self.L
 
-    def adjacency_matrix(self):
-        tree = sp.cKDTree(self.pos.T, boxsize=(self.L,self.L))
-        adj = np.full((self.N, self.N), False)
-        pair_coords = tree.query_pairs(self.r,output_type='ndarray').T
-        adj[pair_coords[0], pair_coords[1]] = True
-        adj[pair_coords[1], pair_coords[0]] = True
-        np.fill_diagonal(adj, True)
-        return adj
+    def neighbors(self):
+        tree = sp.KDTree(self.pos.T, boxsize=(self.L,self.L))
+        return tree.query_ball_tree(tree, r=self.r)
 
     
     def update_dir(self):
-        adj = self.adjacency_matrix()
-        dir_tiled = np.tile(self.dir, (self.N,1))
+        neigh = self.neighbors()
+        num_neigh = np.zeros(self.N)
 
-        num_neigh = np.sum(adj, axis=1)
+        avg_sin = np.zeros(self.N)
+        avg_cos = np.zeros(self.N)
+        for i, neighs_list in enumerate(neigh):
+            avg_sin[i] = sin(self.dir[neighs_list]).sum()
+            avg_cos[i] = cos(self.dir[neighs_list]).sum()
+            num_neigh[i] = len(neighs_list)
+        avg_sin = np.divide(avg_sin, num_neigh)
+        avg_cos = np.divide(avg_cos, num_neigh)
 
-        # average sin of neighbors
-        avg_sin = np.divide(np.sum(np.multiply(adj, sin(dir_tiled)),axis=1), num_neigh)
-
-        # average cos of neighbors
-        avg_cos = np.divide(np.sum(np.multiply(adj, cos(dir_tiled)),axis=1), num_neigh)
-
-        instrinsic_noise = 0
+        instrinsic_noise = 0.0
         if not self.is_extrinstic_noise:
             instrinsic_noise = np.random.uniform(low=-self.eta/2,high=self.eta/2,size=self.N)
         else:
@@ -69,7 +65,11 @@ class Particles:
 
     #Plot the state 
     def plot_state(self):
-        plt.quiver(self.pos[0], self.pos[1], cos(self.dir), sin(self.dir), scale=70)
+        color = np.full(self.N, 'k')
+        neigh = self.neighbors()
+        color[neigh[0]] = 'c'
+        color[0] = 'r'
+        plt.quiver(self.pos[0], self.pos[1], cos(self.dir), sin(self.dir), scale=70, color = color)
         plt.title(Particles.title)
         plt.xlim(0,self.L)
         plt.ylim(0,self.L)

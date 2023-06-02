@@ -6,14 +6,14 @@ from particles import Particles
 
 # constants
 k = 100
-num_pts = 40
+num_pts = 20
 num_runs_per_pt = 5
 Ns = {
     40: 's',
     100: '+',
     400: 'x',
     4000: '^',
-    10000: 'D',
+    # 10000: 'D',
 }
 
 
@@ -54,7 +54,7 @@ def plot_v_eta():
         for i, eta in enumerate(eta_pts):
             avg = 0.0
             for j in range(num_runs_per_pt):
-                avg += va_particles_run(N, eta, iter_before=50, iter_to_avg=40)
+                avg += va_particles_run(N, eta, iter_before=80, iter_to_avg=80)
             avg /= num_runs_per_pt
             avg_vel_pts.append(avg)
 
@@ -103,5 +103,5 @@ def plot_v_eta():
 #     plt.legend()
 #     plt.show()
 
-# animate()
-plot_v_eta()
+animate()
+# plot_v_eta()
