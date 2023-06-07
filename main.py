@@ -5,8 +5,7 @@ from progress import Bar
 from particles import Particles
 
 # constants
-k = 100
-num_pts = 20
+num_pts = 15
 num_runs_per_pt = 5
 Ns = {
     40: 's',
@@ -49,12 +48,12 @@ def plot_v_eta():
         avg_vel_pts = []
         
         # init progress bar
-        bar = Bar(num_signs_to_comp=50, marker='=')
+        bar = Bar()
 
         for i, eta in enumerate(eta_pts):
             avg = 0.0
             for j in range(num_runs_per_pt):
-                avg += va_particles_run(N, eta, iter_before=80, iter_to_avg=80)
+                avg += va_particles_run(N, eta, iter_before=400, iter_to_avg=80)
             avg /= num_runs_per_pt
             avg_vel_pts.append(avg)
 
@@ -70,38 +69,36 @@ def plot_v_eta():
     plt.legend()
     plt.show()
 
-# def plot_v_rho():
-#     # x axis
-#     rho_pts = np.linspace(0.0, 10.0, num_pts)
-#     va_pts = {}
-#     eta = 0.2
-#     L = 20
+def plot_v_rho():
+    # x axis
+    rho_pts = np.linspace(0.1, 2.0, num_pts)
+    va_pts = {}
+    eta = 0.2
+    L = 20.0
     
-#     avg_vel_pts = []
-#     for i, rho in enumerate(rho_pts):
-#         N = int(np.round(rho * L**2))
-#         # print progress bar
-#         sys.stdout.write('\r')
-#         p = int(math.ceil(20 * i/num_pts))
-#         sys.stdout.write("[%-20s] %d%%" % ('='*p, 5*p))
-#         sys.stdout.flush()
+    avg_vel_pts = []
+    bar = Bar()
+    for i, rho in enumerate(rho_pts):
+        N = int(np.ceil(rho * L**2))
 
-#         avg = 0.0
-#         for j in range(num_runs_per_pt):
-#             st = Particles(N=N, eta=eta, L=L)
-#             for i in range(400):
-#                 st.update()
-#             avg += st.avg_vel()
-#         avg /= num_runs_per_pt
-#         avg_vel_pts.append(avg)
-    
-    
-#     plt.scatter(rho_pts, avg_vel_pts, marker='s')
-#     plt.title('$v_a$ as a function of $\rho$')
-#     plt.xlabel('$\rho$')
-#     plt.ylabel('$v_a$')
-#     plt.legend()
-#     plt.show()
+        bar.update((i+1)/num_pts)
 
-animate()
-# plot_v_eta()
+        avg = 0.0
+        for j in range(num_runs_per_pt):
+            st = Particles(N=N, eta=eta, L=L)
+            for i in range(400):
+                st.update()
+            avg += st.avg_vel()
+        avg /= num_runs_per_pt
+        avg_vel_pts.append(avg)
+    
+    
+    plt.scatter(rho_pts, avg_vel_pts, marker='s')
+    plt.title('$v_a$ as a function of $\\rho$')
+    plt.xlabel('$\\rho$')
+    plt.ylabel('$v_a$')
+    # plt.legend()
+    plt.show()
+
+# animate()
+plot_v_rho()

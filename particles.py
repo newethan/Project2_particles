@@ -3,12 +3,13 @@ from numpy import pi, cos, sin, arctan2
 import scipy.spatial as sp
 from scipy.spatial.distance import squareform, pdist
 import matplotlib.pyplot as plt
+import itertools
 
 class Particles:
     title = 'Particles Positions and velocity'
 
     def __init__(self, N:int=150, L:float=7, v:float=0.03,
-                 r:float=1.0, eta:float=0, dt:float=2.0,
+                 r:float=1.0, eta:float=1.5, dt:float=2.0,
                  is_extrinstic_noise:bool = False):
         self.N = N
         self.L = L
@@ -31,19 +32,24 @@ class Particles:
 
     def neighbors(self):
         tree = sp.KDTree(self.pos.T, boxsize=(self.L,self.L))
-        return tree.query_ball_tree(tree, r=self.r)
+        neigh = tree.query_ball_tree(tree, r=self.r)
+        neigh = np.array(list(itertools.zip_longest(*neigh, fillvalue=-1))).T
+        return neigh
 
     
     def update_dir(self):
         neigh = self.neighbors()
         num_neigh = np.zeros(self.N)
 
-        avg_sin = np.zeros(self.N)
-        avg_cos = np.zeros(self.N)
-        for i, neighs_list in enumerate(neigh):
-            avg_sin[i] = sin(self.dir[neighs_list]).sum()
-            avg_cos[i] = cos(self.dir[neighs_list]).sum()
-            num_neigh[i] = len(neighs_list)
+        avg_sin = sin(self.dir[neigh])
+        avg_sin[neigh == -1] = 0
+        avg_sin = avg_sin.sum(axis=1)
+
+        avg_cos = cos(self.dir[neigh])
+        avg_cos[neigh == -1] = 0
+        avg_cos = avg_cos.sum(axis=1)
+
+        num_neigh = (neigh != -1).sum(axis=1)
         avg_sin = np.divide(avg_sin, num_neigh)
         avg_cos = np.divide(avg_cos, num_neigh)
 
@@ -65,11 +71,11 @@ class Particles:
 
     #Plot the state 
     def plot_state(self):
-        color = np.full(self.N, 'k')
-        neigh = self.neighbors()
-        color[neigh[0]] = 'c'
-        color[0] = 'r'
-        plt.quiver(self.pos[0], self.pos[1], cos(self.dir), sin(self.dir), scale=70, color = color)
+        # color = np.full(self.N, 'k')
+        # neigh = self.neighbors()
+        # color[neigh[0]] = 'c'
+        # color[0] = 'r'
+        plt.quiver(self.pos[0], self.pos[1], cos(self.dir), sin(self.dir), scale=70)
         plt.title(Particles.title)
         plt.xlim(0,self.L)
         plt.ylim(0,self.L)
