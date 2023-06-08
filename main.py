@@ -1,17 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.scale import LogScale
 from matplotlib.animation import FuncAnimation
 from progress import Bar
 from particles import Particles
 
 # constants
-num_pts = 15
+num_pts = 30
 num_runs_per_pt = 5
 Ns = {
     40: 's',
     100: '+',
     400: 'x',
-    4000: '^',
+    # 4000: '^',
     # 10000: 'D',
 }
 
@@ -69,6 +70,56 @@ def plot_v_eta():
     plt.legend()
     plt.show()
 
+def plot_v_eta_crit():
+    # x axis
+    eta_crit = 2.9
+
+    nu_pts = np.linspace(0.01, 1.0, num_pts)
+    eta_pts = eta_crit - nu_pts * eta_crit
+    va_pts = {}
+
+    # run for multiple numbers of particles
+    for N in Ns:
+        print(f'\nrunning for {N} particles...')
+
+        avg_vel_pts = []
+        
+        # init progress bar
+        bar = Bar()
+
+        for i, eta in enumerate(eta_pts):
+            avg = 0.0
+            for j in range(num_runs_per_pt):
+                avg += va_particles_run(N, eta, iter_before=100, iter_to_avg=80)
+            avg /= num_runs_per_pt
+            avg_vel_pts.append(avg)
+
+            # update progress bar
+            bar.update((i+1)/num_pts)
+        va_pts[N] = avg_vel_pts
+    log_nu_pts = np.log10(nu_pts)
+    log_va_pts = {}
+    for N in Ns:
+        log_va_pts[N] = np.log10(va_pts[N])
+    for N in Ns:
+        plt.scatter(nu_pts, va_pts[N], marker=Ns[N], label=f'N={N}')
+    plt.title('$v_a$ as a function of $\\nu$')
+    plt.xlabel('$\\nu$')
+    plt.ylabel('$v_a$')
+
+    z = np.polyfit(log_nu_pts, log_va_pts[400], 1)
+    p = np.poly1d(z)
+    plt.plot(nu_pts, 10**p(log_nu_pts), 'r--')
+
+    ax = plt.gca()
+    text = f'$y={z[0]:0.3f}\;x{z[1]:+0.3f}$'
+    ax.text(0.05, 0.95, text,transform=plt.gca().transAxes,
+    fontsize=14, verticalalignment='bottom')
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    plt.legend()
+    plt.show()
+
 def plot_v_rho():
     # x axis
     rho_pts = np.linspace(0.1, 2.0, num_pts)
@@ -100,5 +151,52 @@ def plot_v_rho():
     # plt.legend()
     plt.show()
 
+def plot_v_rho_crit():
+    eta = 2.0
+    L = 7.0
+
+
+    rho_crit = 1.35
+
+    nu_pts = np.logspace(np.log10(0.1), np.log10(10.0), num_pts)
+
+    rho_pts = nu_pts * rho_crit + rho_crit
+
+    va_pts = []
+    
+    # init progress bar
+    bar = Bar()
+
+    for i, rho in enumerate(rho_pts):
+        avg = 0.0
+        for j in range(num_runs_per_pt):
+            st = Particles(N=int(np.ceil(L**2 * rho)), eta=eta, L=L)
+            avg += st.avg_vel_run(iter_before=100, iter_to_avg=80)
+        avg /= num_runs_per_pt
+        va_pts.append(avg)
+
+        # update progress bar
+        bar.update((i+1)/num_pts)
+    log_nu_pts = np.log10(nu_pts)
+    log_va_pts = np.log10(va_pts)
+    plt.scatter(nu_pts, va_pts, marker='s')
+    plt.title('$v_a$ as a function of $\\nu$')
+    plt.xlabel('$\\nu$')
+    plt.ylabel('$v_a$')
+
+    z = np.polyfit(log_nu_pts, log_va_pts, 1)
+    p = np.poly1d(z)
+    plt.plot(nu_pts, 10**p(log_nu_pts), 'r--')
+
+    ax = plt.gca()
+    text = f'$y={z[0]:0.3f}\;x{z[1]:+0.3f}$'
+    ax.text(0.05, 0.95, text,transform=plt.gca().transAxes,
+    fontsize=14, verticalalignment='bottom')
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    plt.legend()
+    plt.show()
+
+
 # animate()
-plot_v_rho()
+plot_v_rho_crit()

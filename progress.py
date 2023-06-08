@@ -2,7 +2,7 @@ import sys
 import math
 
 class Bar:
-    def __init__(self, num_signs_to_comp:int=50, marker:str='#'):
+    def __init__(self, num_signs_to_comp:int=50, marker:str='='):
         if not 100 % num_signs_to_comp == 0:
             raise Exception('Number of signs in a complete bar must divide 100 evenly.')
         self.num_signs_to_comp = num_signs_to_comp
