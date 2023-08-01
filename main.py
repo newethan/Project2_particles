@@ -7,7 +7,7 @@ from particles import Particles
 
 # constants
 num_pts = 30
-num_runs_per_pt = 5
+num_runs_per_pt = 30
 Ns = {
     40: 's',
     100: '+',
@@ -33,7 +33,7 @@ def animate():
 
 def va_particles_run(N, eta, iter_before:int, iter_to_avg:int, rho:float=4.0):
     # changes L to have constant rho
-    st = Particles(N=N, eta=eta, L=np.sqrt(N/rho))
+    st = Particles(N=N, eta=eta, L=np.sqrt(N/rho), is_extrinstic_noise=False)
     return st.avg_vel_run(iter_before, iter_to_avg)
 
 
@@ -54,7 +54,7 @@ def plot_v_eta():
         for i, eta in enumerate(eta_pts):
             avg = 0.0
             for j in range(num_runs_per_pt):
-                avg += va_particles_run(N, eta, iter_before=400, iter_to_avg=80)
+                avg += va_particles_run(N, eta, iter_before=400, iter_to_avg=2000)
             avg /= num_runs_per_pt
             avg_vel_pts.append(avg)
 
@@ -67,6 +67,17 @@ def plot_v_eta():
     plt.title('$v_a$ as a function of $\eta$')
     plt.xlabel('$\eta$')
     plt.ylabel('$v_a$')
+    plt.legend()
+    plt.show()
+
+    for N in Ns:
+        va_dif = (va_pts[N] - np.roll(va_pts[N], 1))[1:]
+        eta_shifted = (eta_pts - np.roll(eta_pts, 1))[1:]
+        deriv = va_dif / eta_shifted
+        plt.scatter(eta_pts[1:], deriv, marker=Ns[N], label=f'N={N}')
+    plt.title('$(\\frac {\partial v_a} {\partial \eta}$) as a function of $\eta$')
+    plt.xlabel('$\eta$')
+    plt.ylabel('$(\\frac {\partial v_a} {\partial \eta})$')
     plt.legend()
     plt.show()
 
@@ -199,4 +210,4 @@ def plot_v_rho_crit():
 
 
 # animate()
-plot_v_rho_crit()
+plot_v_eta()
